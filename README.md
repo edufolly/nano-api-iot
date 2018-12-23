@@ -21,9 +21,13 @@ public static void main(String[] args) {
 ```java
 package io.github.edufolly.nano.start.ws;
 
+import io.github.edufolly.nano.annotations.BodyParam;
 import io.github.edufolly.nano.annotations.GET;
 import io.github.edufolly.nano.annotations.MediaTypeEnum;
+import io.github.edufolly.nano.annotations.POST;
 import io.github.edufolly.nano.annotations.Path;
+import io.github.edufolly.nano.annotations.PathParam;
+import io.github.edufolly.nano.annotations.QueryStringParam;
 import io.github.edufolly.nano.annotations.ReturnType;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,11 +83,38 @@ public class ApiTeste {
         // Nothing.
     }
 
-        @GET
+    @GET
     @Path("/erro")
-    public Object TestException() throws Exception {
+    public Object testException() throws Exception {
         throw new Exception("My error message!");
     }
 
+    @GET
+    @Path("/param/:pint/:pstring")
+    @PathParam({"pint", "pstring"})
+    public Map<String, Object> testGetParam(int pint, String pstring) {
+        Map map = new HashMap();
+        map.put("test", "OK!!");
+        map.put("pint", pint);
+        map.put("pstring", pstring);
+        return map;
+    }
+
+    @GET
+    @Path("/qs")
+    @QueryStringParam({"q"})
+    public Map<String, Object> testGetQueryString(String q) {
+        Map map = new HashMap();
+        map.put("test", "OK!!");
+        map.put("q", q);
+        return map;
+    }
+
+    @POST
+    @BodyParam
+    public Map<String, Object> testPost(Map<String, Object> map) {
+        map.put("test", "OK!!");
+        return map;
+    }
 }
 ```
