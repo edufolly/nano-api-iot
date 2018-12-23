@@ -62,10 +62,10 @@ public class ApiServer extends Thread {
 
             request = new Request(connectedClient.getInputStream());
 
-            if(endpointCache == null) {
+            if (endpointCache == null) {
                 endpointCache = new EndpointCache(nano);
             }
-            
+
             Invokable invokable = endpointCache.find(request);
 
             if (invokable == null) {
@@ -84,18 +84,6 @@ public class ApiServer extends Thread {
                 response.setBody(body);
             }
 
-            response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-
-            response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-
-            response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
-                    "origin, content-type, accept, authorization");
-
-            response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                    "true");
-
-            response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
-                    "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, COPY");
         } catch (Exception ex) {
             LOGGER.error(connectedClient.getInetAddress() + ":"
                     + connectedClient.getPort(), ex);
@@ -105,10 +93,26 @@ public class ApiServer extends Thread {
             }
 
             try {
+                response.clearHeaders();
+                response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
+                response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+
+                response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                        "origin, content-type, accept, authorization");
+
+                response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                        "true");
+
+                response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
+                        "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, COPY");
+
                 response.setHttpStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 ex.printStackTrace(pw);
+
                 Erro erro = new Erro(ex.getMessage(), sw.toString(), request);
                 Gson gson = new Gson();
                 response.setBody(gson.toJson(erro));
@@ -118,7 +122,7 @@ public class ApiServer extends Thread {
         } finally {
             try {
                 if (request != null) {
-                    response.addHeader(HttpHeaders.SERVER, "Nano API IOT Server");
+                    response.addHeader(HttpHeaders.SERVER, nano.getServerName());
                     response.flush();
                 }
             } catch (Exception exx) {

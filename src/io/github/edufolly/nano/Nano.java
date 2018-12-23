@@ -11,13 +11,12 @@ import org.apache.logging.log4j.Logger;
  */
 public class Nano {
 
-    private final Logger logger = LogManager.getRootLogger();
-
     private int port = 8088;
     private int maxConnections = 200;
     private String packageName;
     private String cacheDir = "cache";
     private String logConfigurationFile = "log4j2.xml";
+    private String serverName = "Nano API IOT Server";
 
     public Nano() {
     }
@@ -67,13 +66,24 @@ public class Nano {
         return this;
     }
 
+    public String getServerName() {
+        return serverName;
+    }
+
+    public Nano setServerName(String serverName) {
+        this.serverName = serverName;
+        return this;
+    }
+
     public void start() {
         System.setProperty("log4j.configurationFile", logConfigurationFile);
+
+        Logger logger = LogManager.getRootLogger();
 
         try {
             ServerSocket server = new ServerSocket(port, maxConnections);
 
-            logger.info("Nano API IOT Server aguardando conexões na porta {}.", port);
+            logger.info("{} aguardando conexões na porta {}.", serverName, port);
 
             while (true) {
                 Socket connection = server.accept();

@@ -1,9 +1,12 @@
 package io.github.edufolly.nano;
 
+import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import io.github.edufolly.nano.annotations.BodyParam;
+import io.github.edufolly.nano.annotations.MediaTypeEnum;
 import io.github.edufolly.nano.annotations.PathParam;
 import io.github.edufolly.nano.annotations.QueryStringParam;
+import io.github.edufolly.nano.annotations.ReturnType;
 import io.github.edufolly.nano.util.InvokableException;
 import io.github.edufolly.nano.util.Request;
 import io.github.edufolly.nano.util.Response;
@@ -97,10 +100,11 @@ public class Invokable {
      */
     public String invoke(Request request, Response response) throws InvokableException {
         try {
+            MediaTypeEnum mediaType = MediaTypeEnum.JSON;
+
             File cacheDir = null;
             if (cacheTime > 0) {
                 String hash = request.getHash();
-
                 cacheDir = new File(nano.getCacheDir(), hash);
                 if (cacheDir.exists()) {
                     long now = System.currentTimeMillis() / 1000l;
@@ -158,12 +162,41 @@ public class Invokable {
                 } else if (annotation.annotationType().equals(BodyParam.class)) {
                     objects[i] = GSON.fromJson(request.getBody(), parameterTypes[i]);
                     i++;
+                } else if (annotation.annotationType().equals(ReturnType.class)) {
+                    mediaType = ((ReturnType) annotation).value();
                 }
             }
 
             Object invoked = method.invoke(clazz.newInstance(), objects);
 
-            String retorno = GSON.toJson(invoked);
+            String retorno;
+
+            switch (mediaType) {
+                case HTML:
+                    response.addHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+                    retorno = invoked.toString();
+                    break;
+                case TEXT:
+                    response.addHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
+                    retorno = invoked.toString();
+                    break;
+                default:
+                    response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+
+                    response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+
+                    response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                            "origin, content-type, accept, authorization");
+
+                    response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS,
+                            "true");
+
+                    response.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS,
+                            "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH, COPY");
+
+                    retorno = GSON.toJson(invoked);
+                    break;
+            }
 
             if (cacheDir != null) {
                 if (cacheDir.exists()) {
